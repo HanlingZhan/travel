@@ -82,11 +82,14 @@
   .daychip{
     text-align:center; border-radius:14px; padding:7px 2px;
     background:#fff; border:1.5px solid var(--line); color:var(--mut); cursor:pointer;
-    font-size:11px;
+    font-size:11px; transition:transform .12s;
   }
   .daychip .d{font-size:12.5px; font-weight:800; color:var(--ink);}
   .daychip .w{font-size:10px; margin-top:1px;}
-  .daychip.on{background:linear-gradient(135deg,var(--blue),var(--sky)); color:#fff; border-color:transparent; box-shadow:0 4px 10px rgba(37,99,235,.3);}
+  .daychip.on{
+    background:linear-gradient(135deg,var(--blue),var(--sky)); color:#fff; border-color:transparent;
+    box-shadow:0 2px 6px rgba(37,99,235,.22);
+  }
   .daychip.on .d{color:#fff;}
   .daychip.on .w{color:#fff;}
   .daychip.today{outline:2.5px dashed var(--mid); outline-offset:1px;}
@@ -213,7 +216,7 @@
     text-align:center; font-size:11.5px; padding:7px 2px; border-radius:12px;
     border:1.5px solid var(--line); background:#fff; color:var(--mut); cursor:pointer; font-weight:700;
   }
-  .hchip.on{background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 3px 8px rgba(37,99,235,.3);}
+  .hchip.on{background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 2px 5px rgba(37,99,235,.22);}
   .stay b{color:var(--blue); font-weight:800;}
 </style>
 </head>
@@ -306,7 +309,7 @@ const DAYS = [
     note:"🌧️ 午后零星阵雨，逛老街带把折叠伞就好，室内吃饭按摩不受影响。",
     items:[
       {emoji:"✈️", name:"天府机场抵达", time:"08:00-10:00", desc:"武汉天河起飞 → 成都天府机场落地"},
-      {emoji:"🚇", name:"进城到酒店", type:"trans", desc:"地铁18号线转7号线至驷马桥站，步行400米到住宿点，全程约90分钟（从你酒店出发的精确路线见🧭）", nav:""},
+      {emoji:"🚇", name:"进城到{H}", type:"trans", ho:"to", desc:"抵达后，地铁18号线转7号线，步行约400米/打车起步价到{H}，全程约90分钟", nav:""},
       {emoji:"🏮", name:"宽窄巷子", desc:"老街漫步、拍照打卡", nav:"宽窄巷子"},
       {emoji:"🍢", name:"奎星楼街小吃", desc:"成都街头小吃扫街", nav:"奎星楼街"},
       {emoji:"🐟", name:"烤匠麻辣烤鱼（建设路店）", book:"B-meal-1", desc:"晚餐，到店前1小时线上取号", nav:"烤匠麻辣烤鱼 建设路店"},
@@ -328,7 +331,7 @@ const DAYS = [
     date:"9月2日", w:"周二", wx:"阵雨 23~31℃", theme:"三星堆一日游（错峰）",
     note:"🏛️ 展馆全程室内，完全不受降雨影响，往返路上带把伞即可。",
     items:[
-      {emoji:"🚇", name:"酒店 → 成都东站", type:"trans", desc:"地铁2号线到成都东站", nav:""},
+      {emoji:"🚇", name:"{H} → 成都东站", type:"trans", ho:"from", desc:"从{H}出发，地铁2号线到成都东站（约30-40分钟）", nav:""},
       {emoji:"🚄", name:"城际高铁 → 广汉北", type:"trans", desc:"成都东站乘城际高铁至广汉北站", nav:""},
       {emoji:"🚕", name:"广汉北 → 三星堆新馆", type:"trans", desc:"打车约15分钟到三星堆新馆", nav:"三星堆博物馆"},
       {emoji:"🏺", name:"三星堆博物馆", book:"H-sanxingdui", desc:"工作日错峰游览，刷身份证入园（现场无售票窗口）", nav:"三星堆博物馆"},
@@ -350,7 +353,7 @@ const DAYS = [
     date:"9月4日", w:"周四", wx:"黄龙9~20℃ / 九寨口12~22℃", theme:"成都 → 黄龙 → 九寨沟沟口",
     note:"🧥 穿搭：内层短袖+薄冲锋衣/防风外套、长裤、运动鞋、雨伞；高原紫外线强做好防晒。黄龙最高点3576m，放慢脚步、备氧气瓶和葡萄糖，当晚不要洗澡降低高反风险。",
     items:[
-      {emoji:"🚕", name:"07:30 酒店 → 成都东站", type:"trans", time:"07:30", desc:"打车约35-40分钟，车费≈35-45元，预留堵车", nav:""},
+      {emoji:"🚕", name:"07:30 {H} → 成都东站", type:"trans", ho:"from", time:"07:30", desc:"从{H}打车约35-40分钟，车费≈35-45元，预留堵车", nav:""},
       {emoji:"🚄", name:"高铁 C5772 成都东→黄龙九寨站", book:"H-train", time:"09:30", desc:"09:30-09:31，二等座约143元/人；10:10到站寄存大件行李（8.20 开售）", nav:"黄龙九寨站"},
       {emoji:"🚌", name:"站 → 黄龙景区直通车", book:"M-bus", desc:"官方直通车，票价28元/人、车程40-50分钟，小程序【九旅悦行】提前1天买票", nav:"黄龙景区"},
       {emoji:"🏞️", name:"黄龙游玩（索道上行·步行下山）", book:"M-jiuzhai", time:"11:00-15:00", desc:"五彩池→争艳池→金沙铺地→娑萝映彩池→迎宾池", nav:"黄龙景区"},
@@ -363,13 +366,13 @@ const DAYS = [
     date:"9月5日", w:"周五", wx:"13~23℃ 多云偶有阵雨", theme:"九寨沟全天深度游",
     note:"🥾 沟内比镇上略低，随身带薄外套，步行多穿舒服鞋子。工作日人流最少，放心深度玩。",
     items:[
-      {emoji:"🚶", name:"沟口酒店步行到大门", type:"trans", time:"07:30", desc:"步行前往九寨沟景区大门", nav:""},
+      {emoji:"🚶", name:"{H}步行到沟口大门", type:"trans", ho:"from", time:"07:30", desc:"从{H}步行前往九寨沟景区大门（约10分钟）", nav:""},
       {emoji:"🎫", name:"检票入园", book:"M-jiuzhai", time:"07:50", desc:"提前7天【阿坝旅游网】买好门票+观光车票；必走省力Y字形路线", nav:"九寨沟景区"},
       {emoji:"🌿", name:"日则沟（精华段）", time:"08:00-12:00", desc:"观光车到原始森林→箭竹海→熊猫海→五花海→珍珠滩瀑布→镜海", nav:"九寨沟景区"},
       {emoji:"🍱", name:"诺日朗换乘中心午餐", time:"12:00-13:00", desc:"建议自带零食干粮，景区物价偏高", nav:""},
       {emoji:"💧", name:"则查洼沟", time:"13:00-14:30", desc:"坐车直达长海 → 步行到九寨沟五彩池", nav:"九寨沟景区"},
       {emoji:"🌲", name:"树正沟", time:"14:30-16:30", desc:"诺日朗瀑布→犀牛海→老虎海→树正群海", nav:"九寨沟景区"},
-      {emoji:"🌃", name:"出景区回酒店", time:"17:00", desc:"镇上简单吃饭，早点休息恢复体力", nav:""}
+      {emoji:"🌃", name:"出景区回{H}", ho:"to", time:"17:00", desc:"回{H}，镇上简单吃饭，早点休息恢复体力", nav:""}
     ],
     stay:"住宿：继续住同一家沟口酒店"
   },
@@ -379,7 +382,7 @@ const DAYS = [
     items:[
       {emoji:"🚌", name:"九寨沟 → 黄龙九寨站直通车", book:"M-bus", time:"12:30", desc:"票价51元/人、约2小时，小程序【九旅悦行】提前购票，选12:30班次", nav:"黄龙九寨站"},
       {emoji:"🚄", name:"高铁 黄龙九寨→成都东", book:"H-train", time:"15:30-16:30", desc:"区间任意班次，车程约1.5小时；18:00前后抵成都东（8.22 开售）", nav:"成都东站"},
-      {emoji:"🚇", name:"成都东 → 金科星耀天都", type:"trans", desc:"地铁/打车回市区酒店", nav:""},
+      {emoji:"🚇", name:"成都东 → {H}", type:"trans", ho:"to", desc:"地铁/打车回{H}", nav:""},
       {emoji:"🌃", name:"抚琴夜市", desc:"吃小吃放松一下", nav:"抚琴夜市"}
     ],
     stay:"住宿：金科星耀天都原酒店"
@@ -401,13 +404,13 @@ const DAYS = [
     date:"9月8日", w:"周一", wx:"多云 22~30℃", theme:"简阳城市漫步 + 美食收尾",
     note:"🚐 机场酒店硬性条件：24小时免费接送机。预订后主动联系前台确认接机点位 + 次日送机发车时间。",
     items:[
-      {emoji:"🚇", name:"退房 → 天府机场站", type:"trans", time:"10:00", desc:"地铁18号线直达天府机场站，联系酒店免费接机", nav:""},
-      {emoji:"🏨", name:"机场酒店入住放行李", book:"H-airporthotel", time:"11:30", desc:"7天优品Premium / 菁致星空酒店，放下行李轻装出门", nav:""},
+      {emoji:"🚇", name:"退房 → 天府机场站", type:"trans", ho:"from", time:"10:00", desc:"从{H}退房，地铁18号线直达天府机场站，联系机场酒店免费接机", nav:""},
+      {emoji:"🏨", name:"机场酒店入住放行李", book:"H-airporthotel", ho:"to", time:"11:30", desc:"入住{H}，放下行李轻装出门", nav:""},
       {emoji:"🍲", name:"简阳羊肉汤午餐", time:"12:00", desc:"打车约25分钟、车费40元左右到简阳城区", nav:"简阳羊肉汤"},
       {emoji:"🌳", name:"鳌山公园", time:"13:30-15:30", desc:"免费城市绿肺，登顶印鳌阁俯瞰简阳全城与沱江", nav:"鳌山公园 简阳"},
       {emoji:"🏯", name:"圣德寺白塔（白塔园）", time:"16:00-17:00", desc:"南宋千年古塔，古风拍照出片、人少免费", nav:"圣德寺白塔"},
       {emoji:"🌊", name:"沱江滨江路", time:"17:30-18:30", desc:"沿江散步吹晚风，感受本地市井", nav:"沱江 简阳"},
-      {emoji:"🚕", name:"打车回机场酒店", type:"trans", time:"19:00", desc:"约25分钟，休整准备第二天早班机", nav:""}
+      {emoji:"🚕", name:"打车回{H}", type:"trans", ho:"to", time:"19:00", desc:"回{H}约25分钟，休整准备第二天早班机", nav:""}
     ],
     stay:"住宿：天府机场酒店（7天优品Premium / 菁致星空，双床120-150元、含接送机）"
   },
@@ -415,7 +418,7 @@ const DAYS = [
     date:"9月9日", w:"周二", wx:"早班机返程", theme:"回家啦 ✈️",
     note:"🛫 按酒店约定时间乘送机车前往天府机场，搭乘早班机返回武汉。",
     items:[
-      {emoji:"🚐", name:"酒店送机 → 天府机场", desc:"按约定时间乘送机车前往机场", nav:""},
+      {emoji:"🚐", name:"{H}送机 → 天府机场", ho:"from", desc:"按约定时间乘{H}送机车前往机场", nav:""},
       {emoji:"✈️", name:"早班机返程武汉", desc:"结束10天9晚旅程，平安到家～", nav:""}
     ],
     stay:""
@@ -589,23 +592,43 @@ function tip(msg){ const t=$('#tip'); t.textContent=msg; t.style.display='block'
 
 /* ---- 渲染日芯片 ---- */
 function renderChips(){
-  const wrap = $('#dayChips'); wrap.innerHTML='';
+  const wrap = $('#dayChips');
   const today = new Date();
   const tripStart = new Date(2026,7,31), tripEnd = new Date(2026,8,9);
   const inTrip = today>=tripStart && today<=tripEnd;
+  // 已渲染过 → 只切换选中态，避免重建引起跳动
+  if(wrap.children.length===DAYS.length){
+    [...wrap.children].forEach((el,i)=>el.classList.toggle('on', i===selDay));
+    return;
+  }
   DAYS.forEach((d,i)=>{
     const el = document.createElement('div');
-    el.className='daychip'+(i===selDay?' on':'')+((inTrip&&i===today.getDate? false:false));
+    el.className = 'daychip'+(i===selDay?' on':'');
     el.innerHTML = `<div class="d">${d.date.replace('月','/').replace('日','')}</div><div class="w">${d.w}</div>`;
-    el.onclick=()=>{ selDay=i; renderChips(); renderDay(); refreshWeather(); };
+    el.onclick=()=>{ if(selDay===i) return; selDay=i; renderChips(); renderDay(); refreshWeather(); };
     wrap.appendChild(el);
   });
 }
 
 /* ---- 渲染当日详情 ---- */
+// 把酒店地址截成短名（去掉括号注释/多选/后缀），用于行程标题，避免太长
+function shortName(a){
+  if(!a) return '酒店';
+  return a
+    .replace(/（.*?）|\(.*?\)/g,'')
+    .replace(/[、,，\/].*$/,'')
+    .replace(/(酒店|宾馆|客栈|民宿|公寓)$/,'')
+    .trim() || '酒店';
+}
+// 占位替换：{H} → 传进来的名字
+function renderHotel(s, name){
+  if(typeof s!=='string') return s;
+  return s.replace(/\{H\}/g, name||'酒店');
+}
 function renderDay(){
   const d = DAYS[selDay];
   const htl = getHotelForDay(selDay);
+  const prevHtl = selDay>0? getHotelForDay(selDay-1) : null;
   let h = `<div class="daycard">
     <div class="head"><div class="date">📍 ${d.date} <span style="font-size:12px;color:var(--mut);font-weight:600">${d.w}</span></div>
       <div class="weather">${d.wx}</div></div>
@@ -619,10 +642,16 @@ function renderDay(){
   h += `<div class="tl">`;
   d.items.forEach(it=>{
     const book = it.book? BOOKS[it.book] : null;
+    // ho:"from" 早出发→用前一晚酒店；ho:"to" 晚入住/回→用当天酒店（回退到任一有的）
+    const useHtl = (it.ho==='from')? (prevHtl||htl) : (htl||prevHtl);
+    const useName = useHtl? shortName(useHtl.addr) : '酒店';   // 标题用短名
+    const useAddr = useHtl? useHtl.addr : '酒店';              // 描述用完整地址
+    const nm = renderHotel(it.name, useName);
+    const ds = it.desc? renderHotel(it.desc, useAddr):'';
     h += `<div class="ti"><div class="dot">${it.emoji}</div>
-      <div class="name">${it.time?`<span class="time">${it.time}</span>`:''}${it.name}</div>`;
-    if(it.desc) h += `<div class="desc">${it.desc}</div>`;
-    if(it.type==='trans') h += `<div class="trans">🚇 <span>${htl?('从【'+escapeHtml(htl.addr)+'】出发 · '):''}${it.desc.replace(/（从你酒店出发的精确路线见🧭）/,'')}</span></div>`;
+      <div class="name">${it.time?`<span class="time">${it.time}</span>`:''}${nm}</div>`;
+    if(ds) h += `<div class="desc">${ds}</div>`;
+    if(it.type==='trans' && ds) h += `<div class="trans">🚇 <span>${ds}</span></div>`;
     // buttons
     let acts='<div class="acts">';
     if(it.nav){
