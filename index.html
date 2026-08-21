@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🗺️ 旅行小站</title>
+<style>
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(160deg,#dbeafe 0%,#eff6ff 45%,#f8fafc 100%);
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .card{
+    background:rgba(255,255,255,.92); border-radius:24px; padding:32px 28px; max-width:420px; width:100%;
+    box-shadow:0 10px 30px rgba(37,99,235,.15); border:1px solid #dbeafe; text-align:center;
+  }
+  .emoji{font-size:52px;}
+  h1{font-size:24px; color:#1e293b; margin:10px 0 6px;}
+  .sub{color:#64748b; font-size:14px; margin-bottom:22px;}
+  .list{display:flex; flex-direction:column; gap:12px;}
+  a.city{
+    display:flex; align-items:center; gap:12px; text-decoration:none;
+    background:#eff6ff; border:1.5px solid #dbeafe; border-radius:16px; padding:14px 16px;
+    color:#1e293b; transition:all .15s; text-align:left;
+  }
+  a.city:hover{background:#dbeafe; transform:translateY(-1px);}
+  a.city .ic{font-size:26px;}
+  a.city .nm{font-weight:800; font-size:16px; color:#2563eb;}
+  a.city .ds{font-size:12px; color:#64748b; margin-top:2px;}
+  .empty{color:#94a3b8; font-size:14px; padding:10px 0;}
+  .foot{margin-top:24px; font-size:11px; color:#94a3b8;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="emoji">🗺️</div>
+  <h1>旅行小站</h1>
+  <div class="sub">每个目的地一个小站，欢迎挑一个去逛逛～</div>
+  <div class="list" id="list"></div>
+  <div style="display:none" class="empty" id="empty">🚧 站点建设中，敬请期待～</div>
+  <div class="foot">🐼 由 GitHub Pages 免费托管 · 永久在线</div>
+</div>
+<script>
+  // 以后新增城市：在这里加一行 {emoji, name, desc, url} 即可
+  const CITIES = [
+    {emoji:"🐼", name:"成都 · 10天9晚", desc:"8.31–9.9 行程/交通/购票 · 熊猫元素", url:"chengdu/index.html"}
+  ];
+  if(CITIES.length){
+    document.getElementById('list').innerHTML = CITIES.map(c=>
+      `<a class="city" href="${c.url}"><span class="ic">${c.emoji}</span><span><span class="nm">${c.name}</span><div class="ds">${c.desc}</div></span></a>`
+    ).join('');
+  } else {
+    document.getElementById('empty').style.display='block';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#2563eb" />
+<title>🐼 成都旅行助手 · 10天9晚</title>
+<style>
+  :root{
+    --blue:#2563eb; --blue2:#3b82f6; --sky:#60a5fa; --soft:#eff6ff;
+    --ink:#1e293b; --mut:#64748b; --line:#dbeafe; --card:#ffffff;
+    --hi:#ef4444; --mid:#f59e0b; --lo:#10b981;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(180deg,#dbeafe 0%,#eff6ff 40%,#f8fafc 100%);
+    color:var(--ink); max-width:520px; margin:0 auto; min-height:100vh;
+    padding-bottom:90px;
+  }
+  /* ---- top app bar ---- */
+  .appbar{
+    position:sticky; top:0; z-index:30;
+    background:linear-gradient(135deg,var(--blue) 0%,var(--sky) 100%);
+    color:#fff; padding:14px 16px 12px; border-radius:0 0 26px 26px;
+    box-shadow:0 6px 18px rgba(37,99,235,.28);
+  }
+  .appbar .top{display:flex; align-items:center; gap:10px;}
+  .panda{
+    width:42px; height:42px; border-radius:50%; background:#fff; position:relative; flex:0 0 42px;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+  .panda::before,.panda::after{
+    content:""; position:absolute; top:-7px; width:15px; height:15px; border-radius:50%;
+    background:#1f2937;
+  }
+  .panda::before{left:4px;} .panda::after{right:4px;}
+  .panda .eye{position:absolute; top:13px; width:9px; height:11px; border-radius:50%; background:#1f2937;}
+  .panda .eye.l{left:9px;} .panda .eye.r{right:9px;}
+  .panda .nose{position:absolute; top:24px; left:50%; transform:translateX(-50%); width:7px; height:5px; border-radius:50%; background:#1f2937;}
+  .appbar h1{font-size:18px; margin:0; font-weight:800; letter-spacing:.5px;}
+  .appbar .sub{font-size:12px; opacity:.9; margin-top:2px;}
+  .countdown{
+    margin-top:10px; background:rgba(255,255,255,.18); border-radius:14px;
+    padding:8px 12px; font-size:13px; display:flex; align-items:center; gap:8px; backdrop-filter:blur(4px);
+  }
+  .countdown b{font-size:16px;}
+
+  /* ---- hotel card ---- */
+  .hotel{
+    margin:14px; background:var(--card); border-radius:20px; padding:14px;
+    box-shadow:0 4px 14px rgba(37,99,235,.10); border:1px solid var(--line);
+  }
+  .hotel h2{margin:0 0 8px; font-size:15px; display:flex; align-items:center; gap:6px;}
+  .hotel .row{display:flex; gap:8px;}
+  .hotel input{
+    flex:1; border:1.5px solid var(--line); border-radius:12px; padding:10px 12px;
+    font-size:14px; outline:none; background:var(--soft); color:var(--ink);
+  }
+  .hotel input:focus{border-color:var(--blue2); background:#fff;}
+  .btn{
+    border:none; border-radius:12px; padding:10px 14px; font-size:14px; font-weight:700;
+    background:var(--blue); color:#fff; cursor:pointer; white-space:nowrap;
+  }
+  .btn:active{transform:scale(.96);}
+  .btn.ghost{background:var(--soft); color:var(--blue); border:1.5px solid var(--line);}
+  .hotel .saved{font-size:12px; color:var(--mut); margin-top:8px; display:flex; align-items:center; gap:6px;}
+  .hotel .prov{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;}
+  .chip-prov{
+    font-size:12px; padding:6px 10px; border-radius:20px; border:1.5px solid var(--line);
+    background:#fff; color:var(--mut); cursor:pointer;
+  }
+  .chip-prov.on{background:var(--blue); color:#fff; border-color:var(--blue);}
+
+  /* ---- day chips ---- */
+  .days-wrap{margin:6px 0 4px;}
+  .days{
+    display:flex; gap:8px; overflow-x:auto; padding:6px 14px 10px; scrollbar-width:none;
+  }
+  .days::-webkit-scrollbar{display:none;}
+  .daychip{
+    flex:0 0 auto; min-width:62px; text-align:center; border-radius:16px; padding:8px 6px;
+    background:#fff; border:1.5px solid var(--line); color:var(--mut); cursor:pointer;
+  }
+  .daychip .d{font-size:13px; font-weight:800; color:var(--ink);}
+  .daychip .w{font-size:10px; margin-top:2px;}
+  .daychip.on{background:linear-gradient(135deg,var(--blue),var(--sky)); color:#fff; border-color:transparent; box-shadow:0 4px 10px rgba(37,99,235,.3);}
+  .daychip.on .d{color:#fff;}
+  .daychip.today{outline:2.5px dashed var(--mid); outline-offset:1px;}
+
+  /* ---- section ---- */
+  .sec{margin:14px; }
+  .sec-title{font-size:16px; font-weight:800; margin:0 0 10px; display:flex; align-items:center; gap:7px; color:var(--blue);}
+
+  /* day detail card */
+  .daycard{
+    background:var(--card); border-radius:20px; padding:14px; border:1px solid var(--line);
+    box-shadow:0 4px 14px rgba(37,99,235,.10);
+  }
+  .daycard .head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+  .daycard .date{font-size:17px; font-weight:800;}
+  .daycard .weather{
+    font-size:12px; background:var(--soft); color:var(--blue); padding:4px 10px; border-radius:20px; white-space:nowrap;
+  }
+  .daycard .theme{font-size:13px; color:var(--mut); margin:2px 0 10px;}
+  .wxnote{font-size:12px; background:#fff7ed; color:#c2410c; border-radius:12px; padding:7px 10px; margin-bottom:10px; display:flex; gap:6px;}
+
+  /* timeline */
+  .tl{position:relative; padding-left:26px;}
+  .tl::before{content:""; position:absolute; left:9px; top:6px; bottom:6px; width:2px; background:var(--line);}
+  .ti{position:relative; margin-bottom:14px;}
+  .ti:last-child{margin-bottom:0;}
+  .ti .dot{
+    position:absolute; left:-22px; top:2px; width:18px; height:18px; border-radius:50%;
+    background:var(--soft); border:2px solid var(--blue2); display:flex; align-items:center; justify-content:center; font-size:10px;
+  }
+  .ti .name{font-size:14.5px; font-weight:700; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+  .ti .time{font-size:11px; color:var(--blue); background:var(--soft); padding:1px 7px; border-radius:10px; font-weight:700;}
+  .ti .desc{font-size:12.5px; color:var(--mut); margin-top:3px; line-height:1.55;}
+  .ti .trans{
+    font-size:12px; background:#eef2ff; color:#3730a3; border-radius:10px; padding:6px 9px; margin-top:6px;
+    display:flex; gap:6px; align-items:flex-start;
+  }
+  .ti .acts{display:flex; gap:6px; margin-top:7px; flex-wrap:wrap;}
+  .mini{
+    font-size:11.5px; padding:6px 10px; border-radius:18px; border:1.5px solid var(--line);
+    background:#fff; color:var(--blue); cursor:pointer; font-weight:600;
+  }
+  .mini:active{transform:scale(.95);}
+  .mini.nav{background:var(--blue); color:#fff; border-color:var(--blue);}
+  .mini.lock{background:#fef2f2; color:var(--hi); border-color:#fecaca;}
+  .booktag{
+    display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
+    padding:2px 8px; border-radius:10px; margin-top:6px;
+  }
+  .booktag.hi{background:#fee2e2; color:var(--hi);}
+  .booktag.mid{background:#fef3c7; color:#b45309;}
+  .booktag.lo{background:#d1fae5; color:#047857;}
+
+  .stay{font-size:12.5px; background:#f0f9ff; border:1px dashed var(--sky); border-radius:12px; padding:8px 10px; margin-top:10px; color:#075985;}
+
+  /* reminders */
+  .rem{
+    background:var(--card); border-radius:16px; padding:12px; margin-bottom:10px; border:1px solid var(--line);
+    box-shadow:0 3px 10px rgba(37,99,235,.07);
+  }
+  .rem .rt{display:flex; align-items:center; gap:8px; font-weight:800; font-size:14px;}
+  .rem .pr{font-size:11px; padding:2px 9px; border-radius:10px; color:#fff; font-weight:800;}
+  .pr.hi{background:var(--hi);} .pr.mid{background:var(--mid);} .pr.lo{background:var(--lo);}
+  .ritem{display:flex; gap:9px; padding:9px 0; border-top:1px dashed var(--line); align-items:flex-start;}
+  .ritem:first-of-type{border-top:none;}
+  .ritem .cb{
+    flex:0 0 20px; width:20px; height:20px; border-radius:6px; border:2px solid var(--blue2); margin-top:1px;
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff; background:#fff; cursor:pointer;
+  }
+  .ritem.done .cb{background:var(--lo); border-color:var(--lo);}
+  .ritem.done .txt{text-decoration:line-through; color:var(--mut);}
+  .ritem .txt{font-size:13px; line-height:1.5; flex:1;}
+  .ritem .meta{font-size:11.5px; color:var(--mut); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap;}
+  .ritem .meta b{color:var(--blue);}
+
+  /* budget */
+  .budget{background:var(--card); border-radius:18px; padding:6px 14px; border:1px solid var(--line); box-shadow:0 3px 10px rgba(37,99,235,.07);}
+  .brow{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--line); font-size:13px;}
+  .brow:last-child{border-bottom:none;}
+  .brow .k{color:var(--mut);}
+  .brow .v{font-weight:800;}
+  .brow.total{font-size:15px;}
+  .brow.total .v{color:var(--blue);}
+
+  .footer{text-align:center; font-size:11px; color:var(--mut); padding:18px 0 6px; line-height:1.7;}
+  .float-tip{
+    position:fixed; left:50%; transform:translateX(-50%); bottom:18px; z-index:40;
+    background:var(--blue); color:#fff; padding:10px 18px; border-radius:24px; font-size:13px; font-weight:700;
+    box-shadow:0 6px 18px rgba(37,99,235,.4); display:none; max-width:90%;
+  }
+  .pill-help{font-size:11px; color:var(--mut); margin-top:6px; line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="appbar">
+  <div class="top">
+    <div class="panda"><span class="eye l"></span><span class="eye r"></span><span class="nose"></span></div>
+    <div>
+      <h1>成都旅行助手 🐼</h1>
+      <div class="sub">10天9晚 · 8.31–9.9 · 随时看行程</div>
+    </div>
+  </div>
+  <div class="countdown" id="countdown">🎋 计算中…</div>
+</div>
+
+<!-- 酒店地址 -->
+<div class="hotel">
+  <h2>🏨 我的酒店（还没定？先空着也行）</h2>
+  <div class="row">
+    <input id="hotelInput" placeholder="贴上酒店地址，例如：金科星耀天都 / 昭觉寺南路…" />
+    <button class="btn" onclick="saveHotel()">保存</button>
+  </div>
+  <div class="saved" id="savedLine"></div>
+  <div class="prov">
+    <span style="font-size:12px;color:var(--mut);align-self:center;">导航用：</span>
+    <span class="chip-prov on" data-p="apple" onclick="setProv(this)">🍎 Apple地图</span>
+    <span class="chip-prov" data-p="amap" onclick="setProv(this)">🗺️ 高德</span>
+    <span class="chip-prov" data-p="baidu" onclick="setProv(this)">🅑 百度</span>
+  </div>
+  <div class="pill-help">填好酒店后，每个景点会出现「🧭 导航」按钮：Apple地图会从你酒店出发规划完整路线；高德/百度会直接搜出目的地（在App里再选起点即可）。</div>
+</div>
+
+<!-- 行程 -->
+<div class="sec">
+  <div class="sec-title">📅 每日行程 & 交通路线</div>
+  <div class="days-wrap"><div class="days" id="dayChips"></div></div>
+  <div id="dayDetail"></div>
+</div>
+
+<!-- 提醒 -->
+<div class="sec">
+  <div class="sec-title">🔔 要提前买票 / 预约的提醒</div>
+  <div id="reminders"></div>
+</div>
+
+<!-- 预算 -->
+<div class="sec">
+  <div class="sec-title">💰 预算总览</div>
+  <div class="budget" id="budget"></div>
+</div>
+
+<div class="footer">
+  🐼 成都旅行助手 · 纯网页版，无需备案<br/>
+  数据来自你的飞书行程文档 · 本地保存不联网
+</div>
+
+<div class="float-tip" id="tip"></div>
+
+<script>
+/* ============ 数据 ============ */
+const DAYS = [
+  {
+    date:"8月31日", w:"周日", wx:"阵雨转多云 22~31℃", theme:"抵达成都 · 老街初体验",
+    note:"🌧️ 午后零星阵雨，逛老街带把折叠伞就好，室内吃饭按摩不受影响。",
+    items:[
+      {emoji:"✈️", name:"天府机场抵达", time:"08:00-10:00", desc:"武汉天河起飞 → 成都天府机场落地"},
+      {emoji:"🚇", name:"进城到酒店", type:"trans", desc:"地铁18号线转7号线至驷马桥站，步行400米到住宿点，全程约90分钟（从你酒店出发的精确路线见🧭）", nav:""},
+      {emoji:"🏮", name:"宽窄巷子", desc:"老街漫步、拍照打卡", nav:"宽窄巷子"},
+      {emoji:"🍢", name:"奎星楼街小吃", desc:"成都街头小吃扫街", nav:"奎星楼街"},
+      {emoji:"🐟", name:"烤匠麻辣烤鱼（建设路店）", book:"B-meal-1", desc:"晚餐，到店前1小时线上取号", nav:"烤匠麻辣烤鱼 建设路店"},
+      {emoji:"💆", name:"足部按摩放松", book:"B-massage", desc:"正规足道推拿，美团提前1天约双人包间、备注无采耳", nav:""}
+    ],
+    stay:"住宿：美蜀家酒店（金科星耀天都）/ 全季酒店（昭觉寺南路），双床房约145-160元"
+  },
+  {
+    date:"9月1日", w:"周一", wx:"小雨转阴 22~30℃", theme:"熊猫基地 · 春熙路",
+    note:"🌧️ 上午有小雨，熊猫反而更活跃，带好雨披；下午转阴逛商圈很舒服。周一成都博物馆闭馆，今天不排文博。",
+    items:[
+      {emoji:"🐼", name:"熊猫基地（南门）", book:"M-panda", desc:"3号线熊猫大道站下车，打车10分钟到南门", nav:"成都大熊猫繁育研究基地 南门"},
+      {emoji:"🍜", name:"建设路简餐", desc:"基地出来就近吃个简餐", nav:"建设路"},
+      {emoji:"🛍️", name:"春熙路 · 太古里", desc:"商圈打卡、逛街", nav:"成都太古里"}
+    ],
+    stay:"住宿：同前一晚，不换酒店"
+  },
+  {
+    date:"9月2日", w:"周二", wx:"阵雨 23~31℃", theme:"三星堆一日游（错峰）",
+    note:"🏛️ 展馆全程室内，完全不受降雨影响，往返路上带把伞即可。",
+    items:[
+      {emoji:"🚇", name:"酒店 → 成都东站", type:"trans", desc:"地铁2号线到成都东站", nav:""},
+      {emoji:"🚄", name:"城际高铁 → 广汉北", type:"trans", desc:"成都东站乘城际高铁至广汉北站", nav:""},
+      {emoji:"🚕", name:"广汉北 → 三星堆新馆", type:"trans", desc:"打车约15分钟到三星堆新馆", nav:"三星堆博物馆"},
+      {emoji:"🏺", name:"三星堆博物馆", book:"H-sanxingdui", desc:"工作日错峰游览，刷身份证入园（现场无售票窗口）", nav:"三星堆博物馆"},
+      {emoji:"🍡", name:"建设巷小吃街", desc:"晚上回市区吃小吃", nav:"建设巷"}
+    ],
+    stay:"住宿：同前一晚"
+  },
+  {
+    date:"9月3日", w:"周三", wx:"阴转晴 24~32℃", theme:"成都博物馆 · 武侯祠 · 锦里",
+    note:"☀️ 全天晴好，下午逛武侯祠、傍晚拍锦里亮灯光线最佳。",
+    items:[
+      {emoji:"🏛️", name:"成都博物馆", book:"M-cdmuseum", desc:"3号线转2号线至天府广场站，提前1-2天公众号免费预约", nav:"成都博物馆"},
+      {emoji:"⛩️", name:"武侯祠", book:"M-wuhou", desc:"下午转3号线至高升桥站，提前1天线上购票", nav:"武侯祠"},
+      {emoji:"🏮", name:"锦里夜景", desc:"傍晚亮灯后拍照超好看", nav:"锦里"}
+    ],
+    stay:"住宿：同前一晚"
+  },
+  {
+    date:"9月4日", w:"周四", wx:"黄龙9~20℃ / 九寨口12~22℃", theme:"成都 → 黄龙 → 九寨沟沟口",
+    note:"🧥 穿搭：内层短袖+薄冲锋衣/防风外套、长裤、运动鞋、雨伞；高原紫外线强做好防晒。黄龙最高点3576m，放慢脚步、备氧气瓶和葡萄糖，当晚不要洗澡降低高反风险。",
+    items:[
+      {emoji:"🚕", name:"07:30 酒店 → 成都东站", type:"trans", time:"07:30", desc:"打车约35-40分钟，车费≈35-45元，预留堵车", nav:""},
+      {emoji:"🚄", name:"高铁 C5772 成都东→黄龙九寨站", book:"H-train", time:"09:30", desc:"09:30-09:31，二等座约143元/人；10:10到站寄存大件行李", nav:"黄龙九寨站"},
+      {emoji:"🚌", name:"站 → 黄龙景区直通车", book:"M-bus", desc:"官方直通车，票价28元/人、车程40-50分钟，小程序【九旅悦行】提前1天买票", nav:"黄龙景区"},
+      {emoji:"🏞️", name:"黄龙游玩（索道上行·步行下山）", book:"M-jiuzhai", time:"11:00-15:00", desc:"五彩池→争艳池→金沙铺地→娑萝映彩池→迎宾池", nav:"黄龙景区"},
+      {emoji:"🚌", name:"黄龙 → 九寨沟沟口直通车", book:"M-bus", time:"15:10", desc:"票价50元/人、车程约2小时", nav:"九寨沟景区"},
+      {emoji:"🏨", name:"抵达漳扎镇入住", time:"17:20", desc:"朋来酒店 / 云朵客栈，沟口步行10分钟内，清淡晚饭早点休息", nav:""}
+    ],
+    stay:"住宿：九寨沟漳扎镇沟口酒店（朋来/云朵，双床≤170元、优先电梯房）"
+  },
+  {
+    date:"9月5日", w:"周五", wx:"13~23℃ 多云偶有阵雨", theme:"九寨沟全天深度游",
+    note:"🥾 沟内比镇上略低，随身带薄外套，步行多穿舒服鞋子。工作日人流最少，放心深度玩。",
+    items:[
+      {emoji:"🚶", name:"沟口酒店步行到大门", type:"trans", time:"07:30", desc:"步行前往九寨沟景区大门", nav:""},
+      {emoji:"🎫", name:"检票入园", book:"M-jiuzhai", time:"07:50", desc:"提前7天【阿坝旅游网】买好门票+观光车票；必走省力Y字形路线", nav:"九寨沟景区"},
+      {emoji:"🌿", name:"日则沟（精华段）", time:"08:00-12:00", desc:"观光车到原始森林→箭竹海→熊猫海→五花海→珍珠滩瀑布→镜海", nav:"九寨沟景区"},
+      {emoji:"🍱", name:"诺日朗换乘中心午餐", time:"12:00-13:00", desc:"建议自带零食干粮，景区物价偏高", nav:""},
+      {emoji:"💧", name:"则查洼沟", time:"13:00-14:30", desc:"坐车直达长海 → 步行到九寨沟五彩池", nav:"九寨沟景区"},
+      {emoji:"🌲", name:"树正沟", time:"14:30-16:30", desc:"诺日朗瀑布→犀牛海→老虎海→树正群海", nav:"九寨沟景区"},
+      {emoji:"🌃", name:"出景区回酒店", time:"17:00", desc:"镇上简单吃饭，早点休息恢复体力", nav:""}
+    ],
+    stay:"住宿：继续住同一家沟口酒店"
+  },
+  {
+    date:"9月6日", w:"周六", wx:"九寨14~24℃ / 成都21~29℃", theme:"九寨沟 → 返回成都",
+    note:"😴 不用早起，睡个懒觉；可选方案A补打卡小众点位，或方案B沟口镇上散步休整。12:00前务必退房带齐行李。",
+    items:[
+      {emoji:"🚌", name:"九寨沟 → 黄龙九寨站直通车", book:"M-bus", time:"12:30", desc:"票价51元/人、约2小时，小程序【九旅悦行】提前购票，选12:30班次", nav:"黄龙九寨站"},
+      {emoji:"🚄", name:"高铁 黄龙九寨→成都东", book:"H-train", time:"15:30-16:30", desc:"区间任意班次，车程约1.5小时；18:00前后抵成都东", nav:"成都东站"},
+      {emoji:"🚇", name:"成都东 → 金科星耀天都", type:"trans", desc:"地铁/打车回市区酒店", nav:""},
+      {emoji:"🌃", name:"抚琴夜市", desc:"吃小吃放松一下", nav:"抚琴夜市"}
+    ],
+    stay:"住宿：金科星耀天都原酒店"
+  },
+  {
+    date:"9月7日", w:"周日", wx:"阴转多云 23~29℃", theme:"老成都人文慢享日",
+    note:"🍵 纯休闲美食日，无博物馆，节奏放慢。",
+    items:[
+      {emoji:"🛕", name:"文殊院", time:"09:30-11:30", desc:"地铁1号线文殊院站，逛古寺红墙、院内免费领香", nav:"文殊院"},
+      {emoji:"🍜", name:"洞子口张老二凉粉 / 严太婆锅盔", time:"11:30-12:30", desc:"文殊院门口小吃：凉粉、锅盔、甜水面", nav:"洞子口张老二凉粉"},
+      {emoji:"🍵", name:"人民公园鹤鸣茶社", time:"13:30-16:00", desc:"两杯盖碗茶，竹椅上歇脚唠嗑", nav:"人民公园 鹤鸣茶社"},
+      {emoji:"🏮", name:"宽窄巷子（傍晚）", time:"16:30-18:00", desc:"人少光线好，只逛不消费", nav:"宽窄巷子"},
+      {emoji:"🌶️", name:"奎星楼街 · 坎尖老火锅", book:"B-hotpot", time:"18:30-20:00", desc:"打卡坎尖老火锅（奎星楼店），推荐子母锅；大众点评提前1天约座", nav:"坎尖老火锅 奎星楼店"},
+      {emoji:"🌃", name:"抚琴夜市消食", time:"20:30-21:30", desc:"散步尝冰粉、烤串等本地小吃", nav:"抚琴夜市"}
+    ],
+    stay:"住宿：继续住市区同一家酒店"
+  },
+  {
+    date:"9月8日", w:"周一", wx:"多云 22~30℃", theme:"简阳城市漫步 + 美食收尾",
+    note:"🚐 机场酒店硬性条件：24小时免费接送机。预订后主动联系前台确认接机点位 + 次日送机发车时间。",
+    items:[
+      {emoji:"🚇", name:"退房 → 天府机场站", type:"trans", time:"10:00", desc:"地铁18号线直达天府机场站，联系酒店免费接机", nav:""},
+      {emoji:"🏨", name:"机场酒店入住放行李", book:"H-airporthotel", time:"11:30", desc:"7天优品Premium / 菁致星空酒店，放下行李轻装出门", nav:""},
+      {emoji:"🍲", name:"简阳羊肉汤午餐", time:"12:00", desc:"打车约25分钟、车费40元左右到简阳城区", nav:"简阳羊肉汤"},
+      {emoji:"🌳", name:"鳌山公园", time:"13:30-15:30", desc:"免费城市绿肺，登顶印鳌阁俯瞰简阳全城与沱江", nav:"鳌山公园 简阳"},
+      {emoji:"🏯", name:"圣德寺白塔（白塔园）", time:"16:00-17:00", desc:"南宋千年古塔，古风拍照出片、人少免费", nav:"圣德寺白塔"},
+      {emoji:"🌊", name:"沱江滨江路", time:"17:30-18:30", desc:"沿江散步吹晚风，感受本地市井", nav:"沱江 简阳"},
+      {emoji:"🚕", name:"打车回机场酒店", type:"trans", time:"19:00", desc:"约25分钟，休整准备第二天早班机", nav:""}
+    ],
+    stay:"住宿：天府机场酒店（7天优品Premium / 菁致星空，双床120-150元、含接送机）"
+  },
+  {
+    date:"9月9日", w:"周二", wx:"早班机返程", theme:"回家啦 ✈️",
+    note:"🛫 按酒店约定时间乘送机车前往天府机场，搭乘早班机返回武汉。",
+    items:[
+      {emoji:"🚐", name:"酒店送机 → 天府机场", desc:"按约定时间乘送机车前往机场", nav:""},
+      {emoji:"✈️", name:"早班机返程武汉", desc:"结束10天9晚旅程，平安到家～", nav:""}
+    ],
+    stay:""
+  }
+];
+
+const BOOKS = {
+  "H-stay":{pr:"hi", title:"全程住宿 9晚（分3段）", adv:"现在就订", ch:"各酒店官方/携程等",
+    detail:"①市区金科星耀天都 6晚(8.31-9.3、9.6-9.8) ②九寨沟漳扎镇沟口 2晚(9.4-9.5) ③天府机场 1晚(9.8)。每晚双床≤180元；市区选可免费取消，九寨沟要电梯+电热毯，机场要24h接送机。"},
+  "H-train":{pr:"hi", title:"高铁 成都东 ↔ 黄龙九寨站", adv:"12306 提前15天抢票", ch:"12306 App/小程序",
+    detail:"去程 C5772 成都东 09:30→黄龙九寨站 09:31（9.4）；返程 9.6 15:30-16:30区间任意班次。放票第一时间抢。"},
+  "H-sanxingdui":{pr:"hi", title:"三星堆博物馆（9.2）", adv:"提前5天 晚20:00放票", ch:"三星堆博物馆公众号",
+    detail:"8月28日 20:00 抢 9.2 门票。现场无售票窗口，必须线上预约、刷身份证入园。"},
+  "M-jiuzhai":{pr:"mid", title:"九寨沟 + 黄龙 全套票务", adv:"提前7天 早8:00放票", ch:"阿坝旅游网 微信公众号",
+    detail:"九寨沟(9.5)：门票+观光车套票；黄龙(9.4)：门票+观光车+上行索道票（省力必选索道上山）。旺季限流，尽量准点预约。"},
+  "M-bus":{pr:"mid", title:"三段景区直通车", adv:"游玩前1天购买", ch:"九旅悦行 小程序",
+    detail:"①9.4 黄龙九寨站→黄龙 ②9.4 黄龙→九寨沟沟口 ③9.6 九寨沟→黄龙九寨站（选12:30班次）。"},
+  "M-cdmuseum":{pr:"mid", title:"成都博物馆（9.3）", adv:"提前1-2天", ch:"官方公众号", detail:"免费预约，周一闭馆注意避开。"},
+  "M-panda":{pr:"mid", title:"熊猫基地（9.1 南门）", adv:"提前1天", ch:"官方公众号", detail:"南门入园，早点去熊猫更活跃。"},
+  "M-wuhou":{pr:"mid", title:"武侯祠（9.3）", adv:"提前1天", ch:"线上购票", detail:"与成都博物馆同天，下午去。"},
+  "B-hotpot":{pr:"mid", title:"坎尖老火锅（奎星楼店）", adv:"提前1天", ch:"大众点评", detail:"9.7 晚餐，提前1天约座位，推荐子母锅。"},
+  "B-meal-1":{pr:"mid", title:"烤匠麻辣烤鱼（建设路店）", adv:"到店前1小时", ch:"线上取号", detail:"8.31 晚餐，到店前1小时线上取号避免排队。"},
+  "B-massage":{pr:"mid", title:"双人足道按摩", adv:"提前1天", ch:"美团", detail:"金科星耀天都附近，约双人包间、备注无采耳。"},
+  "H-airporthotel":{pr:"hi", title:"天府机场酒店（9.8）", adv:"现在就订", ch:"各平台",
+    detail:"硬性条件24h免费接送机；订后联系前台确认接机点位+次日最早送机班次。"},
+  "L-free":{pr:"lo", title:"免费景点", adv:"无需预约", ch:"直接去", detail:"文殊院、人民公园、东郊记忆、鳌山公园、圣德寺白塔，直接前往。"},
+  "L-food":{pr:"lo", title:"随到随吃的美食", adv:"无需预约", ch:"直接去", detail:"简阳羊肉汤、夜市小吃、街边餐饮，随到随吃。"},
+  "L-meds":{pr:"lo", title:"高原物资", adv:"到成都再买", ch:"药店", detail:"葡萄糖口服液、肠胃药、防晒，到成都市区药店采购即可。"},
+  "L-gift":{pr:"lo", title:"伴手礼", adv:"9.8 采购", ch:"红旗连锁", detail:"9月8号统一在红旗连锁超市采购零食特产。"}
+};
+
+const BUDGET = [
+  ["住宿（9晚）","1330元","市区6晚×150 + 九寨2晚×160 + 机场1晚×130，单晚≤180"],
+  ["景区门票+观光车+索道","1260元","三星堆/熊猫/武侯祠/九寨/黄龙"],
+  ["全程交通","1680元","高铁往返 + 三段直通车 + 本地地铁打车 + 简阳往返"],
+  ["餐饮（10天）","1850元","含烤匠、坎尖火锅、简阳羊肉汤、小吃"],
+  ["双人按摩2次","500元","正规足道推拿，不含采耳"],
+  ["备用金+伴手礼","750元","零食、药品、特产，可删减"],
+  ["预算总计","7370元","精简餐饮少买特产最低可压至7000元内"]
+];
+
+/* ============ 逻辑 ============ */
+const $ = s=>document.querySelector(s);
+let selDay = 0;
+
+function loadState(){
+  const h = localStorage.getItem('cd_hotel');
+  if(h){ $('#hotelInput').value=h; showSaved(h); }
+  const p = localStorage.getItem('cd_map')||'apple';
+  document.querySelectorAll('.chip-prov').forEach(c=>c.classList.toggle('on', c.dataset.p===p));
+  // checked reminders
+  const done = JSON.parse(localStorage.getItem('cd_done')||'{}');
+  Object.keys(done).forEach(k=>{ if(done[k]) document.documentElement.setAttribute('data-done-'+k,'1'); });
+}
+
+function saveHotel(){
+  const v = $('#hotelInput').value.trim();
+  localStorage.setItem('cd_hotel', v);
+  showSaved(v);
+  tip(v? '🏨 已保存：'+v : '已清空酒店地址');
+  renderDay();
+}
+function showSaved(v){
+  $('#savedLine').innerHTML = v? ('✅ 当前酒店：<b>'+escapeHtml(v)+'</b>') : '⚠️ 还没填酒店，导航按钮会提醒你先填写';
+}
+function setProv(el){
+  document.querySelectorAll('.chip-prov').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  localStorage.setItem('cd_map', el.dataset.p);
+}
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function navTo(name){
+  const hotel = localStorage.getItem('cd_hotel')||'';
+  if(!hotel){ tip('🏨 请先在顶部填写你的酒店地址哦'); $('#hotelInput').focus(); return; }
+  const p = localStorage.getItem('cd_map')||'apple';
+  const d = encodeURIComponent(name), s = encodeURIComponent(hotel);
+  let url;
+  if(p==='apple'){
+    url = `https://maps.apple.com/?saddr=${s}&daddr=${d}&dirflg=r`;
+  }else if(p==='amap'){
+    url = `https://uri.amap.com/search?keyword=${d}&city=成都`;
+  }else{
+    url = `https://api.map.baidu.com/geocoder?address=${d}&output=html&src=webapp`;
+  }
+  window.open(url,'_blank');
+}
+function viewMap(name){
+  const d = encodeURIComponent(name);
+  const p = localStorage.getItem('cd_map')||'apple';
+  let url = p==='baidu' ? `https://api.map.baidu.com/geocoder?address=${d}&output=html&src=webapp`
+        : p==='amap' ? `https://uri.amap.com/search?keyword=${d}&city=成都`
+        : `https://maps.apple.com/?q=${d}`;
+  window.open(url,'_blank');
+}
+function tip(msg){ const t=$('#tip'); t.textContent=msg; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none',2200); }
+
+/* ---- 渲染日芯片 ---- */
+function renderChips(){
+  const wrap = $('#dayChips'); wrap.innerHTML='';
+  const today = new Date();
+  const tripStart = new Date(2026,7,31), tripEnd = new Date(2026,8,9);
+  const inTrip = today>=tripStart && today<=tripEnd;
+  DAYS.forEach((d,i)=>{
+    const el = document.createElement('div');
+    el.className='daychip'+(i===selDay?' on':'')+((inTrip&&i===today.getDate? false:false));
+    el.innerHTML = `<div class="d">${d.date.replace('月','/').replace('日','')}</div><div class="w">${d.w}</div>`;
+    el.onclick=()=>{ selDay=i; renderChips(); renderDay(); };
+    wrap.appendChild(el);
+  });
+}
+
+/* ---- 渲染当日详情 ---- */
+function renderDay(){
+  const d = DAYS[selDay];
+  const hotel = localStorage.getItem('cd_hotel')||'';
+  let h = `<div class="daycard">
+    <div class="head"><div class="date">📍 ${d.date} <span style="font-size:12px;color:var(--mut);font-weight:600">${d.w}</span></div>
+      <div class="weather">${d.wx}</div></div>
+    <div class="theme">${d.theme}</div>`;
+  if(d.note) h += `<div class="wxnote">${d.note}</div>`;
+  h += `<div class="tl">`;
+  d.items.forEach(it=>{
+    const book = it.book? BOOKS[it.book] : null;
+    h += `<div class="ti"><div class="dot">${it.emoji}</div>
+      <div class="name">${it.time?`<span class="time">${it.time}</span>`:''}${it.name}</div>`;
+    if(it.desc) h += `<div class="desc">${it.desc}</div>`;
+    if(it.type==='trans') h += `<div class="trans">🚇 <span>${hotel?('从【'+escapeHtml(hotel)+'】出发 · '):''}${it.desc.replace(/（从你酒店出发的精确路线见🧭）/,'')}</span></div>`;
+    // buttons
+    let acts='<div class="acts">';
+    if(it.nav){
+      acts += `<span class="mini nav" onclick="navTo('${it.nav.replace(/'/g,"\\'")}')">🧭 导航</span>`;
+      acts += `<span class="mini" onclick="viewMap('${it.nav.replace(/'/g,"\\'")}')">📍 查看</span>`;
+    }
+    if(book){
+      const cls = book.pr==='hi'?'hi':book.pr==='mid'?'mid':'lo';
+      acts += `<span class="mini lock" onclick="gotoReminder('${it.book}')">🔔 ${book.pr==='hi'?'必抢':book.pr==='mid'?'建议提前':'可到蓉再办'}</span>`;
+    }
+    acts += '</div>';
+    h += acts;
+    if(book){
+      const cls = book.pr==='hi'?'hi':book.pr==='mid'?'mid':'lo';
+      h += `<span class="booktag ${cls}">${book.pr==='hi'?'🔴':book.pr==='mid'?'🟠':'🟢'} ${book.title} · ${book.adv}</span>`;
+    }
+    h += `</div>`;
+  });
+  h += `</div>`;
+  if(d.stay) h += `<div class="stay">🏨 ${d.stay}</div>`;
+  h += `</div>`;
+  $('#dayDetail').innerHTML = h;
+}
+
+/* ---- 渲染提醒 ---- */
+function renderReminders(){
+  const groups = [['hi','🔴 高优先级（订不到直接打乱行程）'],['mid','🟠 中优先级（建议提前买，省排队防售罄）'],['lo','🟢 低优先级（到成都再安排）']];
+  const done = JSON.parse(localStorage.getItem('cd_done')||'{}');
+  let h='';
+  groups.forEach(([pr,title])=>{
+    const items = Object.entries(BOOKS).filter(([k,v])=>v.pr===pr);
+    if(!items.length) return;
+    h += `<div class="rem"><div class="rt"><span class="pr ${pr}">${pr==='hi'?'高':pr==='mid'?'中':'低'}</span>${title}</div>`;
+    items.forEach(([k,v])=>{
+      const isDone = done[k];
+      h += `<div class="ritem ${isDone?'done':''}" id="ri-${k}">
+        <div class="cb" onclick="toggleDone('${k}')">${isDone?'✓':''}</div>
+        <div class="txt"><b>${v.title}</b><div style="font-weight:400;color:var(--mut);margin-top:2px">${v.detail}</div>
+          <div class="meta"><span>⏰ <b>${v.adv}</b></span><span>📱 ${v.ch}</span></div>
+        </div></div>`;
+    });
+    h += `</div>`;
+  });
+  $('#reminders').innerHTML = h;
+}
+function toggleDone(k){
+  const done = JSON.parse(localStorage.getItem('cd_done')||'{}');
+  done[k] = !done[k];
+  localStorage.setItem('cd_done', JSON.stringify(done));
+  const el = document.getElementById('ri-'+k);
+  if(el) el.classList.toggle('done', done[k]);
+  const cb = el? el.querySelector('.cb'):null;
+  if(cb) cb.textContent = done[k]?'✓':'';
+}
+function gotoReminder(k){
+  document.getElementById('reminders').scrollIntoView({behavior:'smooth'});
+  const el = document.getElementById('ri-'+k);
+  if(el){ el.style.transition='background .3s'; el.style.background='#fff7ed';
+    setTimeout(()=>el.style.background='',1200); }
+}
+
+/* ---- 预算 ---- */
+function renderBudget(){
+  let h='';
+  BUDGET.forEach(([k,v,note],i)=>{
+    const total = i===BUDGET.length-1;
+    h += `<div class="brow ${total?'total':''}"><span class="k">${k}${note?` <span style="font-size:11px">(${note})</span>`:''}</span><span class="v">${v}</span></div>`;
+  });
+  $('#budget').innerHTML = h;
+}
+
+/* ---- 倒计时 ---- */
+function renderCountdown(){
+  const today = new Date(); const start = new Date(2026,7,31);
+  const diff = Math.ceil((start-today)/86400000);
+  let msg;
+  if(diff>0) msg = `🎋 距离出发还有 <b>${diff}</b> 天，先抢票订酒店最稳～`;
+  else if(diff===0) msg = `🐼 今天出发！玩得开心～`;
+  else msg = `✈️ 旅程进行中 / 已结束，慢慢回味～`;
+  $('#countdown').innerHTML = msg;
+}
+
+/* ---- init ---- */
+loadState();
+renderChips();
+renderDay();
+renderReminders();
+renderBudget();
+renderCountdown();
+</script>
+</body>
+</html>
