@@ -194,6 +194,27 @@
     box-shadow:0 6px 18px rgba(37,99,235,.4); display:none; max-width:90%;
   }
   .pill-help{font-size:11px; color:var(--mut); margin-top:6px; line-height:1.5;}
+  /* ---- 多酒店管理 ---- */
+  .empty{font-size:12px; color:var(--mut); padding:6px 0;}
+  .hrow{
+    display:flex; align-items:center; gap:8px; border:1px solid var(--line);
+    border-radius:14px; padding:10px 12px; margin-bottom:8px; background:var(--soft);
+  }
+  .hrow .hn{font-size:13.5px; font-weight:700; word-break:break-all;}
+  .hrow .htags{font-size:11px; color:var(--blue); margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;}
+  .hrow .htags span{background:#fff; border:1px solid var(--line); border-radius:8px; padding:1px 6px; color:var(--blue);}
+  .hrow .htags .def{background:#e0f2fe; border-color:#bae6fd; color:#0369a1;}
+  .hacts{display:flex; gap:6px; flex:0 0 auto;}
+  .hacts .mini{font-size:11px; padding:5px 9px;}
+  .mini.danger{background:#fef2f2; color:var(--hi); border-color:#fecaca;}
+  .pick-title{font-size:12px; font-weight:700; color:var(--ink); margin:10px 0 6px; display:flex; align-items:center; gap:4px;}
+  .hdays{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:0 0 6px;}
+  .hchip{
+    text-align:center; font-size:11.5px; padding:7px 2px; border-radius:12px;
+    border:1.5px solid var(--line); background:#fff; color:var(--mut); cursor:pointer; font-weight:700;
+  }
+  .hchip.on{background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 3px 8px rgba(37,99,235,.3);}
+  .stay b{color:var(--blue); font-weight:800;}
 </style>
 </head>
 <body>
@@ -221,13 +242,26 @@
   <div style="text-align:right;margin-top:6px;"><button class="wrefresh" onclick="refreshWeather()">🔄 刷新</button></div>
 </div>
 
-<!-- 酒店地址 -->
+<!-- 酒店管理 -->
 <div class="hotel">
-  <h2>🏨 我的酒店（还没定？先空着也行）</h2>
+  <h2>🏨 我的酒店（可以填好几家）</h2>
   <div class="row">
     <input id="hotelInput" placeholder="贴上酒店地址，例如：金科星耀天都 / 昭觉寺南路…" />
-    <button class="btn" onclick="saveHotel()">保存</button>
+    <button class="btn" onclick="saveHotel()">添加</button>
   </div>
+  <div class="pick-title">📅 这家酒店住哪几天？（必选，可多选）</div>
+  <div class="hdays" id="hotelDays"></div>
+  <div class="hrow" id="hotelRow">
+    <div style="flex:1">
+      <div class="hn"></div>
+      <div class="htags"></div>
+    </div>
+    <div class="hacts">
+      <span class="mini" onclick="setDefaultHotel(this)">⭐ 默认</span>
+      <span class="mini danger" onclick="delHotel(this)">🗑️ 删</span>
+    </div>
+  </div>
+  <div class="empty" id="hotelEmpty">还没有酒店～ 填地址 + 勾选日期，点「添加」即可</div>
   <div class="saved" id="savedLine"></div>
   <div class="prov">
     <span style="font-size:12px;color:var(--mut);align-self:center;">导航用：</span>
@@ -235,7 +269,7 @@
     <span class="chip-prov on" data-p="amap" onclick="setProv(this)">🗺️ 高德</span>
     <span class="chip-prov" data-p="baidu" onclick="setProv(this)">🅑 百度</span>
   </div>
-  <div class="pill-help">填好酒店后，每个景点会出现「🧭 导航」按钮：Apple地图会从你酒店出发规划完整路线；高德/百度会直接搜出目的地（在App里再选起点即可）。</div>
+  <div class="pill-help">每家酒店选好覆盖的日期后保存，对应那几天的行程卡片里就会显示这家酒店，导航也自动从它出发。⭐ 设为默认 = 没选日期的天用它。</div>
 </div>
 
 <!-- 行程 -->
@@ -426,26 +460,100 @@ const BUDGET = [
 /* ============ 逻辑 ============ */
 const $ = s=>document.querySelector(s);
 let selDay = 0;
+// 酒店数据: [{addr, days:[0..9], def:bool}]
+function loadHotels(){ try{ return JSON.parse(localStorage.getItem('cd_hotels')||'[]'); }catch(e){ return []; } }
+function saveHotels(list){ localStorage.setItem('cd_hotels', JSON.stringify(list)); }
+let padFor = new Set(); // 当前输入框勾选的日期
+// 兼容旧版单个酒店（cd_hotel）→ 迁移到多酒店
+(function migrateOldHotel(){
+  const old = localStorage.getItem('cd_hotel');
+  if(old){
+    let list = loadHotels();
+    if(!list.some(x=>x.addr===old)){
+      list.push({ addr:old, days:[], def:true });
+      saveHotels(list);
+    }
+    localStorage.removeItem('cd_hotel');
+  }
+})();
 
 function loadState(){
-  const h = localStorage.getItem('cd_hotel');
-  if(h){ $('#hotelInput').value=h; showSaved(h); }
   const p = localStorage.getItem('cd_map')||'amap';
   document.querySelectorAll('.chip-prov').forEach(c=>c.classList.toggle('on', c.dataset.p===p));
   // checked reminders
   const done = JSON.parse(localStorage.getItem('cd_done')||'{}');
   Object.keys(done).forEach(k=>{ if(done[k]) document.documentElement.setAttribute('data-done-'+k,'1'); });
+  renderHotelPicker(); renderHotelRows();
 }
 
 function saveHotel(){
   const v = $('#hotelInput').value.trim();
-  localStorage.setItem('cd_hotel', v);
-  showSaved(v);
-  tip(v? '🏨 已保存：'+v : '已清空酒店地址');
-  renderDay();
+  if(!v){ tip('🏨 先输入酒店地址哦'); $('#hotelInput').focus(); return; }
+  if(!hotelDaysSel().length){ tip('📅 记得勾选住哪几天～（可多选）'); return; }
+  const list = loadHotels();
+  list.push({ addr:v, days:hotelDaysSel(), def:false });
+  saveHotels(list);
+  $('#hotelInput').value='';
+  padFor.clear();
+  renderHotelRows(); renderHotelPicker(); renderDay();
+  $('#hotelInput').focus();
+  tip('🏨 已添加：'+v);
 }
-function showSaved(v){
-  $('#savedLine').innerHTML = v? ('✅ 当前酒店：<b>'+escapeHtml(v)+'</b>') : '⚠️ 还没填酒店，导航按钮会提醒你先填写';
+function hotelDaysSel(){ return [...padFor].sort((a,b)=>a-b); }
+function selDayToggle(el){
+  const i = +el.dataset.i;
+  if(padFor.has(i)) padFor.delete(i); else padFor.add(i);
+  el.classList.toggle('on', padFor.has(i));
+}
+function renderHotelPicker(){
+  const wrap = $('#hotelDays'); wrap.innerHTML='';
+  DAYS.forEach((d,i)=>{
+    const s = document.createElement('span');
+    s.className = 'hchip'+(padFor.has(i)?' on':'');
+    s.dataset.i = i;
+    s.textContent = d.date.replace('月','/').replace('日','');
+    s.onclick = ()=>selDayToggle(s);
+    wrap.appendChild(s);
+  });
+}
+function getHotelForDay(i){
+  const list = loadHotels();
+  const hit = list.filter(x=>x.days.includes(i));
+  return hit.length? hit[0] : (list.filter(x=>x.def)[0] || null);
+}
+function renderHotelRows(){
+  const list = loadHotels();
+  $('#savedLine').innerHTML = list.length? ('✅ 已保存 <b>'+list.length+'</b> 家酒店，已关联到对应日期') : '⚠️ 还没添加酒店，导航按钮会提醒你先添加';
+  const empty = $('#hotelEmpty'), row = $('#hotelRow');
+  if(!list.length){ empty.style.display='block'; row.style.display='none'; return; }
+  empty.style.display='none'; row.style.display='block';
+  // 重新生成列表（内联在容器里）
+  row.innerHTML = list.map((x,idx)=>`
+      <div class="hrow">
+        <div style="flex:1">
+          <div class="hn">${escapeHtml(x.addr)}</div>
+          <div class="htags">${x.days.map(i=>`<span>${DAYS[i].date.replace('月','/').replace('日','')}</span>`).join('')}${x.def?'<span class="def">⭐默认</span>':''}</div>
+        </div>
+        <div class="hacts">
+          <span class="mini" onclick="setDefaultHotel(${idx})">${x.def?'⭐ 默认':'☆ 设默认'}</span>
+          <span class="mini danger" onclick="delHotel(${idx})">🗑️</span>
+        </div>
+      </div>`).join('');
+}
+function setDefaultHotel(idx){
+  const list = loadHotels();
+  list.forEach((x,i)=>x.def = (i===idx));
+  saveHotels(list); renderHotelRows(); renderHotelPicker(); renderDay();
+  tip('⭐ 已设为默认酒店（未指定日期的天用它）');
+}
+function delHotel(idx){
+  const list = loadHotels();
+  const name = list[idx] && list[idx].addr;
+  list.splice(idx,1);
+  saveHotels(list);
+  renderHotelRows();
+  renderDay();
+  tip('🗑️ 已删除'+(name?'：'+name:''));
 }
 function setProv(el){
   document.querySelectorAll('.chip-prov').forEach(c=>c.classList.remove('on'));
@@ -455,8 +563,8 @@ function setProv(el){
 function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 function navTo(name){
-  const hotel = localStorage.getItem('cd_hotel')||'';
-  if(!hotel){ tip('🏨 请先在顶部填写你的酒店地址哦'); $('#hotelInput').focus(); return; }
+  const hotel = (getHotelForDay(selDay)||{}).addr||'';
+  if(!hotel){ tip('🏨 先把当天酒店填上：顶部添加酒店并勾选这天（或设为默认）'); $('#hotelInput').focus(); return; }
   const p = localStorage.getItem('cd_map')||'amap';
   const d = encodeURIComponent(name), s = encodeURIComponent(hotel);
   let url;
@@ -497,19 +605,24 @@ function renderChips(){
 /* ---- 渲染当日详情 ---- */
 function renderDay(){
   const d = DAYS[selDay];
-  const hotel = localStorage.getItem('cd_hotel')||'';
+  const htl = getHotelForDay(selDay);
   let h = `<div class="daycard">
     <div class="head"><div class="date">📍 ${d.date} <span style="font-size:12px;color:var(--mut);font-weight:600">${d.w}</span></div>
       <div class="weather">${d.wx}</div></div>
     <div class="theme">${d.theme}</div>`;
   if(d.note) h += `<div class="wxnote">${d.note}</div>`;
+  if(htl){
+    h += `<div class="stay">🏨 今晚住：<b>${escapeHtml(htl.addr)}</b>${htl.def?' <span style="opacity:.6">(默认)</span>':''}</div>`;
+  }else{
+    h += `<div class="stay" style="background:#fefce8;border-color:#fde047;color:#854d0e;">🏨 今晚酒店还没关联～ 顶部添加酒店并勾选这天（或设为默认）</div>`;
+  }
   h += `<div class="tl">`;
   d.items.forEach(it=>{
     const book = it.book? BOOKS[it.book] : null;
     h += `<div class="ti"><div class="dot">${it.emoji}</div>
       <div class="name">${it.time?`<span class="time">${it.time}</span>`:''}${it.name}</div>`;
     if(it.desc) h += `<div class="desc">${it.desc}</div>`;
-    if(it.type==='trans') h += `<div class="trans">🚇 <span>${hotel?('从【'+escapeHtml(hotel)+'】出发 · '):''}${it.desc.replace(/（从你酒店出发的精确路线见🧭）/,'')}</span></div>`;
+    if(it.type==='trans') h += `<div class="trans">🚇 <span>${htl?('从【'+escapeHtml(htl.addr)+'】出发 · '):''}${it.desc.replace(/（从你酒店出发的精确路线见🧭）/,'')}</span></div>`;
     // buttons
     let acts='<div class="acts">';
     if(it.nav){
