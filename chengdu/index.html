@@ -73,21 +73,39 @@
   }
   .chip-prov.on{background:var(--blue); color:#fff; border-color:var(--blue);}
 
-  /* ---- day chips ---- */
+  /* ---- day chips (2 行网格) ---- */
   .days-wrap{margin:6px 0 4px;}
   .days{
-    display:flex; gap:8px; overflow-x:auto; padding:6px 14px 10px; scrollbar-width:none;
+    display:grid; grid-template-columns:repeat(5,1fr); gap:7px;
+    padding:6px 2px 8px;
   }
-  .days::-webkit-scrollbar{display:none;}
   .daychip{
-    flex:0 0 auto; min-width:62px; text-align:center; border-radius:16px; padding:8px 6px;
+    text-align:center; border-radius:14px; padding:7px 2px;
     background:#fff; border:1.5px solid var(--line); color:var(--mut); cursor:pointer;
+    font-size:11px;
   }
-  .daychip .d{font-size:13px; font-weight:800; color:var(--ink);}
-  .daychip .w{font-size:10px; margin-top:2px;}
+  .daychip .d{font-size:12.5px; font-weight:800; color:var(--ink);}
+  .daychip .w{font-size:10px; margin-top:1px;}
   .daychip.on{background:linear-gradient(135deg,var(--blue),var(--sky)); color:#fff; border-color:transparent; box-shadow:0 4px 10px rgba(37,99,235,.3);}
   .daychip.on .d{color:#fff;}
+  .daychip.on .w{color:#fff;}
   .daychip.today{outline:2.5px dashed var(--mid); outline-offset:1px;}
+
+  /* ---- 实时天气卡片 ---- */
+  .weather-live{
+    margin:14px; background:linear-gradient(135deg,#3b82f6 0%,#7dd3fc 100%);
+    border-radius:20px; padding:14px 16px; color:#fff;
+    box-shadow:0 4px 14px rgba(37,99,235,.20); display:none;
+  }
+  .weather-live .wtop{display:flex; align-items:center; justify-content:space-between;}
+  .weather-live .wplace{font-size:16px; font-weight:800; display:flex; align-items:center; gap:6px;}
+  .weather-live .wtemp{font-size:30px; font-weight:800; line-height:1;}
+  .weather-live .wsub{font-size:12px; opacity:.95; margin-top:4px; display:flex; gap:10px; flex-wrap:wrap;}
+  .weather-live .wdate{font-size:11px; opacity:.85; margin-top:5px;}
+  .weather-live .wrefresh{margin-left:auto; font-size:11px; background:rgba(255,255,255,.2); border:none; color:#fff; border-radius:20px; padding:5px 10px; cursor:pointer;}
+  .weather-live .wrefresh:active{transform:scale(.96);}
+  .weather-live.err{background:linear-gradient(135deg,#64748b 0%,#94a3b8 100%); box-shadow:none;}
+  .weather-live .wemoji{font-size:26px;}
 
   /* ---- section ---- */
   .sec{margin:14px; }
@@ -191,6 +209,18 @@
   <div class="countdown" id="countdown">🎋 计算中…</div>
 </div>
 
+<!-- 实时天气 -->
+<div class="weather-live" id="weatherLive">
+  <div class="wtop">
+    <div><span class="wemoji" id="wEmoji">🌤️</span></div>
+    <div style="flex:1;margin-left:10px;"><div class="wplace" id="wPlace">成都</div>
+    <div class="wsub" id="wSub"></div></div>
+    <div style="text-align:right;"><div class="wtemp" id="wTemp">--°</div>
+    <div class="wdate" id="wDate"></div></div>
+  </div>
+  <div style="text-align:right;margin-top:6px;"><button class="wrefresh" onclick="refreshWeather()">🔄 刷新</button></div>
+</div>
+
 <!-- 酒店地址 -->
 <div class="hotel">
   <h2>🏨 我的酒店（还没定？先空着也行）</h2>
@@ -201,8 +231,8 @@
   <div class="saved" id="savedLine"></div>
   <div class="prov">
     <span style="font-size:12px;color:var(--mut);align-self:center;">导航用：</span>
-    <span class="chip-prov on" data-p="apple" onclick="setProv(this)">🍎 Apple地图</span>
-    <span class="chip-prov" data-p="amap" onclick="setProv(this)">🗺️ 高德</span>
+    <span class="chip-prov" data-p="apple" onclick="setProv(this)">🍎 Apple地图</span>
+    <span class="chip-prov on" data-p="amap" onclick="setProv(this)">🗺️ 高德</span>
     <span class="chip-prov" data-p="baidu" onclick="setProv(this)">🅑 百度</span>
   </div>
   <div class="pill-help">填好酒店后，每个景点会出现「🧭 导航」按钮：Apple地图会从你酒店出发规划完整路线；高德/百度会直接搜出目的地（在App里再选起点即可）。</div>
@@ -287,7 +317,7 @@ const DAYS = [
     note:"🧥 穿搭：内层短袖+薄冲锋衣/防风外套、长裤、运动鞋、雨伞；高原紫外线强做好防晒。黄龙最高点3576m，放慢脚步、备氧气瓶和葡萄糖，当晚不要洗澡降低高反风险。",
     items:[
       {emoji:"🚕", name:"07:30 酒店 → 成都东站", type:"trans", time:"07:30", desc:"打车约35-40分钟，车费≈35-45元，预留堵车", nav:""},
-      {emoji:"🚄", name:"高铁 C5772 成都东→黄龙九寨站", book:"H-train", time:"09:30", desc:"09:30-09:31，二等座约143元/人；10:10到站寄存大件行李", nav:"黄龙九寨站"},
+      {emoji:"🚄", name:"高铁 C5772 成都东→黄龙九寨站", book:"H-train", time:"09:30", desc:"09:30-09:31，二等座约143元/人；10:10到站寄存大件行李（8.20 开售）", nav:"黄龙九寨站"},
       {emoji:"🚌", name:"站 → 黄龙景区直通车", book:"M-bus", desc:"官方直通车，票价28元/人、车程40-50分钟，小程序【九旅悦行】提前1天买票", nav:"黄龙景区"},
       {emoji:"🏞️", name:"黄龙游玩（索道上行·步行下山）", book:"M-jiuzhai", time:"11:00-15:00", desc:"五彩池→争艳池→金沙铺地→娑萝映彩池→迎宾池", nav:"黄龙景区"},
       {emoji:"🚌", name:"黄龙 → 九寨沟沟口直通车", book:"M-bus", time:"15:10", desc:"票价50元/人、车程约2小时", nav:"九寨沟景区"},
@@ -314,7 +344,7 @@ const DAYS = [
     note:"😴 不用早起，睡个懒觉；可选方案A补打卡小众点位，或方案B沟口镇上散步休整。12:00前务必退房带齐行李。",
     items:[
       {emoji:"🚌", name:"九寨沟 → 黄龙九寨站直通车", book:"M-bus", time:"12:30", desc:"票价51元/人、约2小时，小程序【九旅悦行】提前购票，选12:30班次", nav:"黄龙九寨站"},
-      {emoji:"🚄", name:"高铁 黄龙九寨→成都东", book:"H-train", time:"15:30-16:30", desc:"区间任意班次，车程约1.5小时；18:00前后抵成都东", nav:"成都东站"},
+      {emoji:"🚄", name:"高铁 黄龙九寨→成都东", book:"H-train", time:"15:30-16:30", desc:"区间任意班次，车程约1.5小时；18:00前后抵成都东（8.22 开售）", nav:"成都东站"},
       {emoji:"🚇", name:"成都东 → 金科星耀天都", type:"trans", desc:"地铁/打车回市区酒店", nav:""},
       {emoji:"🌃", name:"抚琴夜市", desc:"吃小吃放松一下", nav:"抚琴夜市"}
     ],
@@ -361,10 +391,10 @@ const DAYS = [
 const BOOKS = {
   "H-stay":{pr:"hi", title:"全程住宿 9晚（分3段）", adv:"现在就订", ch:"各酒店官方/携程等",
     detail:"①市区金科星耀天都 6晚(8.31-9.3、9.6-9.8) ②九寨沟漳扎镇沟口 2晚(9.4-9.5) ③天府机场 1晚(9.8)。每晚双床≤180元；市区选可免费取消，九寨沟要电梯+电热毯，机场要24h接送机。"},
-  "H-train":{pr:"hi", title:"高铁 成都东 ↔ 黄龙九寨站", adv:"12306 提前15天抢票", ch:"12306 App/小程序",
-    detail:"去程 C5772 成都东 09:30→黄龙九寨站 09:31（9.4）；返程 9.6 15:30-16:30区间任意班次。放票第一时间抢。"},
+  "H-train":{pr:"hi", title:"高铁 成都东 ↔ 黄龙九寨站", adv:"8.20 开售（提前15天）", ch:"12306 App/小程序",
+    detail:"【去程】9.4 C5772 成都东09:30→黄龙九寨站09:31（8.20 开抢）；【返程】9.6 15:30-16:30区间任意班次（8.22 开抢）。放票第一时间抢！"},
   "H-sanxingdui":{pr:"hi", title:"三星堆博物馆（9.2）", adv:"提前5天 晚20:00放票", ch:"三星堆博物馆公众号",
-    detail:"8月28日 20:00 抢 9.2 门票。现场无售票窗口，必须线上预约、刷身份证入园。"},
+    detail:"【开售日】8月28日 20:00 抢 9.2 门票。现场无售票窗口，必须线上预约、刷身份证入园。"},
   "M-jiuzhai":{pr:"mid", title:"九寨沟 + 黄龙 全套票务", adv:"提前7天 早8:00放票", ch:"阿坝旅游网 微信公众号",
     detail:"九寨沟(9.5)：门票+观光车套票；黄龙(9.4)：门票+观光车+上行索道票（省力必选索道上山）。旺季限流，尽量准点预约。"},
   "M-bus":{pr:"mid", title:"三段景区直通车", adv:"游玩前1天购买", ch:"九旅悦行 小程序",
@@ -400,7 +430,7 @@ let selDay = 0;
 function loadState(){
   const h = localStorage.getItem('cd_hotel');
   if(h){ $('#hotelInput').value=h; showSaved(h); }
-  const p = localStorage.getItem('cd_map')||'apple';
+  const p = localStorage.getItem('cd_map')||'amap';
   document.querySelectorAll('.chip-prov').forEach(c=>c.classList.toggle('on', c.dataset.p===p));
   // checked reminders
   const done = JSON.parse(localStorage.getItem('cd_done')||'{}');
@@ -427,7 +457,7 @@ function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&l
 function navTo(name){
   const hotel = localStorage.getItem('cd_hotel')||'';
   if(!hotel){ tip('🏨 请先在顶部填写你的酒店地址哦'); $('#hotelInput').focus(); return; }
-  const p = localStorage.getItem('cd_map')||'apple';
+  const p = localStorage.getItem('cd_map')||'amap';
   const d = encodeURIComponent(name), s = encodeURIComponent(hotel);
   let url;
   if(p==='apple'){
@@ -441,7 +471,7 @@ function navTo(name){
 }
 function viewMap(name){
   const d = encodeURIComponent(name);
-  const p = localStorage.getItem('cd_map')||'apple';
+  const p = localStorage.getItem('cd_map')||'amap';
   let url = p==='baidu' ? `https://api.map.baidu.com/geocoder?address=${d}&output=html&src=webapp`
         : p==='amap' ? `https://uri.amap.com/search?keyword=${d}&city=成都`
         : `https://maps.apple.com/?q=${d}`;
@@ -459,7 +489,7 @@ function renderChips(){
     const el = document.createElement('div');
     el.className='daychip'+(i===selDay?' on':'')+((inTrip&&i===today.getDate? false:false));
     el.innerHTML = `<div class="d">${d.date.replace('月','/').replace('日','')}</div><div class="w">${d.w}</div>`;
-    el.onclick=()=>{ selDay=i; renderChips(); renderDay(); };
+    el.onclick=()=>{ selDay=i; renderChips(); renderDay(); refreshWeather(); };
     wrap.appendChild(el);
   });
 }
@@ -551,6 +581,73 @@ function renderBudget(){
   $('#budget').innerHTML = h;
 }
 
+/* ---- 实时天气 ---- */
+// 每天行程所在地（wttr.in 城市名 / 显示名）
+function dayCity(i){
+  const map = [
+    {city:"Chengdu", name:"成都市区"},
+    {city:"Chengdu", name:"成都 熊猫基地"},
+    {city:"Guanghan", name:"广汉 三星堆"},
+    {city:"Chengdu", name:"成都 武侯祠"},
+    {city:"Huanglong", name:"黄龙 / 九寨沟沟口"},
+    {city:"Jiuzhaigou", name:"九寨沟景区"},
+    {city:"Jiuzhaigou", name:"九寨沟 → 成都"},
+    {city:"Chengdu", name:"成都 老城"},
+    {city:"Jianyang", name:"简阳"},
+    {city:"Chengdu", name:"天府机场"}
+  ];
+  return map[Math.min(selDay,9)];
+}
+function weatherEmoji(desc){
+  const t = desc||'';
+  if(/sun|clear/i.test(t)) return '☀️';
+  if(/partly|cloud/i.test(t) ) return '⛅';
+  if(/overcast|cloud/i.test(t)) return '☁️';
+  if(/rain/i.test(t)) return '🌧️';
+  if(/thunder/i.test(t)) return '⛈️';
+  if(/snow/i.test(t)) return '❄️';
+  if(/fog|mist/i.test(t)) return '🌫️';
+  return '🌤️';
+}
+function weatherZh(desc){
+  const t = (desc||'').toLowerCase();
+  if(/thunder|storm/i.test(t)) return '雷阵雨';
+  if(/heavy rain|rainstorm/i.test(t)) return '大雨';
+  if(/light rain|drizzle|shower/i.test(t)) return '小雨';
+  if(/rain/i.test(t)) return '雨';
+  if(/snow/i.test(t)) return '雪';
+  if(/partly cloudy/i.test(t)) return '多云';
+  if(/overcast|cloudy/i.test(t)) return '阴';
+  if(/fog|mist/i.test(t)) return '雾';
+  if(/clear|sun/i.test(t)) return '晴';
+  return '天气未知';
+}
+async function refreshWeather(){
+  const card = $('#weatherLive');
+  const c = dayCity();
+  $('#wPlace').textContent = c.name;
+  card.style.display='block';
+  card.classList.remove('err');
+  $('#wSub').textContent = '加载中…';
+  try{
+    const r = await fetch(`https://wttr.in/${c.city}?format=j1&lang=zh`);
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    const cur = j.current_condition[0];
+    if(!cur || !cur.temp_C) throw 0;
+    $('#wTemp').textContent = (cur.temp_C|0)+'°';
+    const desc = (cur.weatherDesc&&cur.weatherDesc[0]&&cur.weatherDesc[0].value)||'';
+    $('#wEmoji').textContent = weatherEmoji(desc);
+    $('#wSub').innerHTML = `<span>🌡️ 体感 ${cur.FeelsLikeC|0}°</span><span>💨 ${cur.windspeedKmph||'-'}km/h ${cur.winddir16Point||''}</span><span>💧 ${cur.humidity||'-'}%</span>`;
+    $('#wDate').textContent = (j.current_condition[0].localObsDateTime||j.current_condition[0].observation_time||'') + ' · ' + weatherZh(desc);
+  }catch(e){
+    card.classList.add('err');
+    $('#wTemp').textContent='--';
+    $('#wSub').textContent='☹️ 天气加载失败，点右下角重试';
+    $('#wEmoji').textContent='🌧️';
+  }
+}
+
 /* ---- 倒计时 ---- */
 function renderCountdown(){
   const today = new Date(); const start = new Date(2026,7,31);
@@ -569,6 +666,7 @@ renderDay();
 renderReminders();
 renderBudget();
 renderCountdown();
+refreshWeather();
 </script>
 </body>
 </html>
