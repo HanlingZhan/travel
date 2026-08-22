@@ -481,15 +481,18 @@ let padFor = new Set(); // 当前输入框勾选的日期
     localStorage.removeItem('cd_hotel');
   }
 })();
-// 首次访问：预置两处已定死的酒店（8/31-9/1 来住星辰，9/3 乔遇公寓·成都东站）
+// 预置两处已定死的酒店（8/31-9/1 来住星辰，9/3 乔遇公寓·成都东站）；已存在则不重复添加，保留用户已填的其他酒店
 (function seedHotels(){
-  if(!localStorage.getItem('cd_hotels')){
-    const def = [
-      {addr:"来住星辰酒店（成都春熙路文殊院店）", days:[0,1], def:true},
-      {addr:"乔遇公寓（成都东站）— 玩完九寨坐最晚高铁回来的休息点", days:[3], def:false}
-    ];
-    try{ localStorage.setItem('cd_hotels', JSON.stringify(def)); }catch(e){}
-  }
+  let list;
+  try{ list = JSON.parse(localStorage.getItem('cd_hotels')||'[]'); }catch(e){ list=[]; }
+  if(!Array.isArray(list)) list=[];
+  const fixed = [
+    {addr:"来住星辰酒店（成都春熙路文殊院店）", days:[0,1], def:false},
+    {addr:"乔遇公寓（成都东站）— 玩完九寨坐最晚高铁回来的休息点", days:[3], def:false}
+  ];
+  let changed=false;
+  fixed.forEach(f=>{ if(!list.some(x=>x.addr===f.addr)){ list.push(f); changed=true; } });
+  if(changed){ try{ localStorage.setItem('cd_hotels', JSON.stringify(list)); }catch(e){} }
 })();
 
 function loadState(){
